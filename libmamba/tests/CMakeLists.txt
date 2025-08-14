@@ -22,8 +22,6 @@ set(
     src/test_main.cpp
     # Catch utils
     src/catch-utils/conda_url.hpp
-    src/catch-utils/msvc_catch_byte.cpp
-    src/catch-utils/msvc_catch_string_view.cpp
     # Utility library
     src/util/test_cast.cpp
     src/util/test_charconv.cpp
