@@ -52,7 +52,7 @@ add_library(solv::cpp ALIAS solv-cpp)
 if(BUILD_LIBMAMBA_TESTS)
     add_subdirectory(tests)
 endif()
-
+#[[
 # Object libraries are installed as an interface library (in libmambaTargets) but do not install any
 # objects (.o files) or headers without the ``OBJECTS DESTINATION`` property.
 install(
@@ -62,3 +62,4 @@ install(
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+#]]

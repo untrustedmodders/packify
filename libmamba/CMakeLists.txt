@@ -777,7 +777,7 @@ endif()
 
 # Installation
 # ============
-
+#[[
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
@@ -840,3 +840,4 @@ install(
     DESTINATION ${LIBMAMBA_CMAKECONFIG_INSTALL_DIR}
     COMPONENT Mamba_Development
 )
+]]#
