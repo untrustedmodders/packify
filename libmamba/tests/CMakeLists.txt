@@ -119,7 +119,8 @@ target_include_directories(
         "${CMAKE_SOURCE_DIR}/libmamba/src"
 )
 
-find_package(Catch2 REQUIRED)
+#find_package(Catch2 REQUIRED)
+include(FetchCatch2)
 find_package(Threads REQUIRED)
 
 target_link_libraries(

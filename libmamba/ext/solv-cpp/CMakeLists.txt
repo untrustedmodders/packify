@@ -25,7 +25,7 @@ target_include_directories(
 target_compile_definitions(solv-cpp PUBLIC LIBSOLV_SOLVABLE_PREPEND_DEP)
 
 find_package(tl-expected REQUIRED)
-find_package(Libsolv REQUIRED)
+#find_package(Libsolv REQUIRED)
 
 if(BUILD_SHARED)
     set(LIBSOLV_DEPS solv::libsolv solv::libsolvext)

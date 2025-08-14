@@ -78,6 +78,8 @@ endif()
 
 if(WIN32)
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+else(UNIX AND NOT APPLE)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif()
 
 option(ENABLE_ASAN "Enable AddressSanitizer (currently only supported on GCC and Clang)" OFF)
@@ -422,17 +424,51 @@ set(
 
 # Targets and link
 # ================
+include(FetchContent)
 
-find_package(fmt CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
-find_package(tl-expected CONFIG REQUIRED)
-find_package(nlohmann_json CONFIG REQUIRED)
-find_package(simdjson CONFIG REQUIRED)
-find_package(yaml-cpp CONFIG REQUIRED)
-find_package(reproc CONFIG REQUIRED)
-find_package(reproc++ CONFIG REQUIRED)
-find_package(Libsolv MODULE REQUIRED)
+find_package(ZLIB MODULE REQUIRED)
+
+find_package(yaml-cpp CONFIG QUIET)
+if(NOT yaml-cpp_FOUND)
+    include(FetchYamlCpp)
+endif()
+
+find_package(fmt CONFIG QUIET)
+if(NOT fmt_FOUND)
+    include(FetchFmt)
+endif()
+
+find_package(spdlog CONFIG QUIET)
+if(NOT spdlog_FOUND)
+    include(FetchSpdlog)
+endif()
+
+find_package(nlohmann_json CONFIG QUIET)
+if(NOT nlohmann_json_FOUND)
+    include(FetchNlohmannJson)
+endif()
+
+find_package(simdjson CONFIG QUIET)
+if (NOT simdjson_FOUND)
+    include(FetchSimdJson)
+endif()
+
+find_package(reproc CONFIG QUIET)
+find_package(reproc++ CONFIG QUIET)
+if(NOT reproc_FOUND OR NOT reproc++_FOUND)
+    include(FetchReproc)
+endif()
+
+find_package(tl-expected CONFIG QUIET)
+if(NOT tl-expected_FOUND)
+    include(FetchTlExpected)
+endif()
+
+#find_package(Libsolv MODULE REQUIRED)
+include(FetchLibsolv)
 add_subdirectory(ext/solv-cpp)
+
+
 
 macro(libmamba_create_target target_name linkage output_name)
     string(TOUPPER "${linkage}" linkage_upper)
@@ -473,13 +509,13 @@ macro(libmamba_create_target target_name linkage output_name)
     if(${linkage_upper} STREQUAL "STATIC")
         message("   -> Statically linking against libmamba (static) dependencies")
 
-        mamba_target_check_type(yaml-cpp::yaml-cpp STATIC_LIBRARY FATAL_ERROR)
+        mamba_target_check_type(yaml-cpp STATIC_LIBRARY FATAL_ERROR)
         mamba_target_check_type(reproc STATIC_LIBRARY FATAL_ERROR)
         mamba_target_check_type(reproc++ STATIC_LIBRARY FATAL_ERROR)
 
         target_link_libraries(
             ${target_name}
-            PUBLIC fmt::fmt-header-only spdlog::spdlog_header_only yaml-cpp::yaml-cpp
+            PUBLIC fmt::fmt-header-only spdlog::spdlog_header_only yaml-cpp
             PRIVATE
                 reproc
                 reproc++
@@ -596,7 +632,7 @@ macro(libmamba_create_target target_name linkage output_name)
                     ${LIBXML2_LIBRARY}
                     ${ICONV_LIBRARY}
                     ${CHARSET_LIBRARY}
-                    zstd::libzstd_static
+                    libzstd_static
                     ${LZ4_LIBRARY}
                     ${LZO2_LIBRARY}
                     ${BZIP2_LIBRARIES}
@@ -612,25 +648,25 @@ macro(libmamba_create_target target_name linkage output_name)
     else()
         message("   -> Dynamically linking against libmamba (shared) dependencies")
 
-        mamba_target_check_type(yaml-cpp::yaml-cpp SHARED_LIBRARY WARNING)
+        #mamba_target_check_type(yaml-cpp SHARED_LIBRARY WARNING)
 
         find_package(CURL REQUIRED)
         find_package(LibArchive REQUIRED)
-        find_package(zstd REQUIRED)
         find_package(BZip2 REQUIRED)
         find_package(OpenSSL REQUIRED)
+        find_package(zstd QUIET)
+        if(NOT zstd_FOUND)
+            include(FetchZstd)
+        endif()
 
         target_link_libraries(
             ${target_name}
             PUBLIC
                 ${LIBSOLV_LIBRARIES}
                 ${LIBSOLVEXT_LIBRARIES}
-                yaml-cpp::yaml-cpp
+                yaml-cpp
                 fmt::fmt
-                # Since conda-forge spdlog is built with a bundled version of fmt we use the header
-                # only version to avoid chasing after the correct fmt version matching the one used
-                # in the bundle
-                spdlog::spdlog_header_only
+                spdlog::spdlog
             PRIVATE
                 ${LibArchive_LIBRARIES}
                 ${CURL_LIBRARIES}
@@ -639,7 +675,7 @@ macro(libmamba_create_target target_name linkage output_name)
                 reproc
                 reproc++
                 simdjson::simdjson
-                zstd::libzstd_shared
+                libzstd_static # zstd is a static library, so we can use it here
                 solv::libsolv
                 solv::libsolvext
                 solv::cpp
@@ -685,11 +721,11 @@ macro(libmamba_create_target target_name linkage output_name)
         target_compile_definitions(${target_name} PUBLIC GHC_WIN_DISABLE_WSTRING_STORAGE_TYPE)
     endif()
 
-    if(${linkage_upper} STREQUAL "STATIC")
+    #if(${linkage_upper} STREQUAL "STATIC")
         find_package(Threads REQUIRED)
 
         target_link_libraries(${target_name} PUBLIC Threads::Threads)
-    endif()
+    #endif()
 
     list(APPEND libmamba_targets ${target_name})
     add_library(mamba::${target_name} ALIAS ${target_name})
