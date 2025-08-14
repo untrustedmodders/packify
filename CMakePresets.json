@@ -1,31 +1,39 @@
 {
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 14,
+    "patch": 0
+  },
   "configurePresets": [
-    {
-      "displayName": "Mamba Unix Shared Debug",
-      "inherits": ["conda-unix", "libmamba-all", "mamba-shared", "mamba-debug"],
-      "name": "mamba-unix-shared-debug"
-    },
-    {
-      "displayName": "Mamba Unix Shared Release",
-      "inherits": [
-        "conda-unix",
-        "libmamba-all",
-        "mamba-shared",
-        "mamba-release"
-      ],
-      "name": "mamba-unix-shared-release"
-    },
-    {
-      "displayName": "Mamba Unix Shared Debug Dev",
-      "inherits": ["mamba-unix-shared-debug", "mamba-dev"],
-      "name": "mamba-unix-shared-debug-dev"
-    },
-    {
-      "displayName": "Mamba Win Shared Release",
-      "inherits": ["libmamba-all", "mamba-shared", "mamba-release"],
-      "name": "mamba-win-shared-release"
-    }
+	{
+	  "name": "default",
+	  "displayName": "Default Config",
+	  "description": "Default build using Ninja generator",
+	  "generator": "Ninja",
+	  "binaryDir": "${sourceDir}/build/${hostSystemName}/${presetName}",
+	  "hidden": true
+	},
+	{
+	  "name": "Debug",
+	  "displayName": "Debug",
+	  "inherits": "default",
+	  "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+	},
+	{
+	  "name": "Release",
+	  "displayName": "Release",
+	  "inherits": "default"
+	}
   ],
-  "include": ["dev/CMakePresetsUnix.json", "dev/CMakePresetsMamba.json"],
-  "version": 4
+  "buildPresets": [
+	{
+	  "name": "Debug",
+	  "configurePreset": "Debug"
+	},
+	{
+	  "name": "Release",
+	  "configurePreset": "Release"
+	}
+  ]
 }
